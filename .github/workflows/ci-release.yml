@@ -1,0 +1,115 @@
+
+name: ci-release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: 1.8.3
+      - name: Install deps
+        run: poetry install
+      - name: Lint
+        run: poetry run ruff check .
+      - name: Format check
+        run: poetry run black --check .
+      - name: Type check
+        run: poetry run mypy .
+      - name: Tests
+        run: poetry run pytest -q
+      - name: Coverage
+        run: |
+          poetry run coverage run -m pytest
+          poetry run coverage report -m
+          poetry run coverage-badge -o coverage.svg -f
+      - name: Build
+        run: poetry build
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: compose-to-quadlet-${{ github.ref_name }}
+          path: |
+            dist/*
+            coverage.svg
+
+  publish:
+    needs: build-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: 1.8.3
+      - name: Publish to PyPI
+        env:
+          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_API_TOKEN }}
+        run: poetry publish --no-interaction --username __token__ --password $POETRY_PYPI_TOKEN_PYPI
+
+  release:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Determine prerelease
+        id: pre
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if [[ "$TAG" =~ -alpha|-beta|-rc ]]; then
+            echo "pre=true" >> $GITHUB_OUTPUT
+          else
+            echo "pre=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+      - name: Zip artifact
+        run: |
+          zip -r compose-to-quadlet-${{ github.ref_name }}.zip artifacts
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          prerelease: ${{ steps.pre.outputs.pre }}
+          files: compose-to-quadlet-${{ github.ref_name }}.zip
+
+  docs:
+    needs: build-test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install pdoc
+          pip install .
+      - name: Build docs
+        run: |
+          pdoc -o site --docformat google compose_to_quadlet
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site

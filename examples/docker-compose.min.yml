@@ -1,0 +1,37 @@
+version: "3.8"
+services:
+  web:
+    image: nginx:1.27-alpine
+    ports:
+      - "8080:80"
+    environment:
+      - NGINX_HOST=localhost
+    volumes:
+      - webdata:/usr/share/nginx/html:ro
+    networks:
+      - webnet
+  api:
+    image: ghcr.io/example/api:latest
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_USER: user
+      DB_PASS: pass
+    ports:
+      - "9000:9000/tcp"
+    networks: [ webnet ]
+  db:
+    image: docker.io/library/postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: example
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    networks: [ webnet ]
+
+networks:
+  webnet: { driver: bridge }
+
+volumes:
+  webdata: { }
+  dbdata: { }
