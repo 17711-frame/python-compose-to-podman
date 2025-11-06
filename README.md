@@ -12,6 +12,7 @@
 - [Synopsis](#synopsis)
 - [Install](#install)
 - [Usage](#usage)
+- [Running Tests](#running-tests)
 - [Examples](#examples)
 - [CI/CD](#cicd)
 - [License](#license)
@@ -32,6 +33,14 @@ poetry add compose-to-quadlet
 ```bash
 compose-to-quadlet --help
 compose-to-quadlet convert examples/docker-compose.min.yml -o ./quadlets
+# or, if using poetry
+poetry run compose-to-quadlet convert examples/docker-compose.min.yml -o ./quadlets
+```
+
+## Running Tests
+To run the unit tests and check code coverage, use the following command:
+```bash
+poetry run pytest
 ```
 
 ## Examples
