@@ -47,8 +47,6 @@ This project ships a GitHub Actions workflow that lints, tests, builds, publishe
   - Quadlet container units: https://docs.podman.io/en/latest/markdown/quadlet-container.5.html
   - Docker/Podman Compose reference: https://docs.docker.com/compose/compose-file/
 
-## License
-MIT © The 17711 Frame — https://17711.org
 
 ### Sponsored by The 17711 Frame
 
@@ -59,3 +57,7 @@ MIT © The 17711 Frame — https://17711.org
 
 ## Contributing
 See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## License
+
+> MIT © The 17711 Frame — https://17711.org
