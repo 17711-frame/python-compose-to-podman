@@ -59,4 +59,3 @@ MIT © The 17711 Frame — https://17711.org
 
 ## Contributing
 See [CONTRIBUTING.md](CONTRIBUTING.md).
-# python-compose-to-quadlet
